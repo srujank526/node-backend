@@ -28,7 +28,7 @@ server.listen(PORT, () => {
 });
 io.on('connection', (socket) => {
     socket.on('join-room', ({ name, roomId }) => {
-        let client = { socket: socket.id, roomId, name }
+        let client = { socketId: socket.id, roomId, name, playersBought:[] }
         clients.push(client);
         socket.join(roomId);
         const filteredClients = clients.filter(client => client.roomId === roomId);
@@ -52,9 +52,30 @@ io.on('connection', (socket) => {
             const playerId = roomData[roomId].playerId + 1;
             const setId = roomData[roomId].typeId
             const type = roomData[roomId].type[setId]
-            io.to(roomId).emit('resPlayer', roomData[roomId].players[type][playerId]);
-                // io.to(roomId).emit('currentBid', { user: null, bidAmount: player.basePrice });
+            const playerData = roomData[roomId].players[type][playerId]
+            io.to(roomId).emit('resPlayer', playerData);
+            if(playerData){
+                io.to(roomId).emit('currentBid', { user: null, bidAmount: playerData.basePrice });
+            }
             roomData[roomId].playerId = playerId
         });
+
+        socket.on('bidPlaced',(data)=>{
+            io.to(roomId).emit('resBidPlaced',data)
+        })
+        socket.on('sell-player',({socketId,playerObj,bidAmount})=>{
+            let soldPlayerObj = {name:playerObj.name, soldAt:bidAmount}  
+            clients = clients.map((client)=>{
+                if(client.socketId === socketId){
+                    return {...client,playersBought:[...client.playersBought,soldPlayerObj]}
+                }
+                return client
+            })
+            
+        })
+        socket.on('req-players-sold-details',()=>{
+            let filteredClients = clients.filter(client=>client.roomId === roomId)
+            io.to(roomId).emit('res-players-sold-details',filteredClients)
+        })
     })
 })
