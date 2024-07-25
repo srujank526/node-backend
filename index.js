@@ -28,7 +28,7 @@ server.listen(PORT, () => {
 });
 io.on('connection', (socket) => {
     socket.on('join-room', ({ name, roomId }) => {
-        let client = { socketId: socket.id, roomId, name, playersBought:[] }
+        let client = { socketId: socket.id, roomId, name, playersBought:[], purse:10000 }
         clients.push(client);
         socket.join(roomId);
         const filteredClients = clients.filter(client => client.roomId === roomId);
@@ -67,7 +67,7 @@ io.on('connection', (socket) => {
             let soldPlayerObj = {name:playerObj.name, soldAt:bidAmount}  
             clients = clients.map((client)=>{
                 if(client.socketId === socketId){
-                    return {...client,playersBought:[...client.playersBought,soldPlayerObj]}
+                    return {...client,playersBought:[...client.playersBought,soldPlayerObj], purse:client.purse-bidAmount}
                 }
                 return client
             })
