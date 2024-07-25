@@ -28,7 +28,8 @@ server.listen(PORT, () => {
 });
 io.on('connection', (socket) => {
     socket.on('join-room', ({ name, roomId }) => {
-        let client = { socketId: socket.id, roomId, name, playersBought:[], purse:10000 }
+        let client = { socketId: socket.id, roomId, name, playersBought:[], purse:10000, isAdmin:false }
+        if (!roomData[roomId]) client.isAdmin=true
         clients.push(client);
         socket.join(roomId);
         const filteredClients = clients.filter(client => client.roomId === roomId);
