@@ -28,7 +28,7 @@ server.listen(PORT, () => {
 });
 io.on('connection', (socket) => {
     socket.on('join-room', ({ name, roomId }) => {
-        let client = { socketId: socket.id, roomId, name, playersBought:[], purse:10000, isAdmin:false }
+        let client = { socketId: socket.id, roomId, name, playersBought:[], purse:10000, isAdmin:false, playingXI:[] }
         if (!roomData[roomId]) client.isAdmin=true
         clients.push(client);
         socket.join(roomId);
@@ -77,6 +77,15 @@ io.on('connection', (socket) => {
         socket.on('req-players-sold-details',()=>{
             let filteredClients = clients.filter(client=>client.roomId === roomId)
             io.to(roomId).emit('res-players-sold-details',filteredClients)
+        })
+        socket.on('reqUpdatePlayingXI',(data)=>{
+            clients.map(client=>{
+                if(client.socketId === data.socketId){
+                    client.playingXI = [...data.selectedPlayers]
+                }
+            })
+            let filteredClients = clients.filter(client=>client.roomId === roomId)
+            io.to(roomId).emit('resUpdatePLayingXI',filteredClients)
         })
     })
 })
